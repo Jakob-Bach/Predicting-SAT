@@ -1,4 +1,4 @@
-# Predicting Satisfiablity of Benchmark Instances
+# Predicting Satisfiability of Benchmark Instances
 
 This repository contains the code and text of the paper
 
