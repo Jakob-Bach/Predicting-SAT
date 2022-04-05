@@ -10,6 +10,8 @@ Usage: python -m run_evaluation --help
 import argparse
 import pathlib
 
+import pandas as pd
+
 
 # Main-routine: run complete evaluation pipeline. To that end, read results from the "results_dir"
 # and save plots to the "plot_dir". Print some statistics to the console.
@@ -21,6 +23,20 @@ def evaluate(results_dir: pathlib.Path, plot_dir: pathlib.Path) -> None:
         plot_dir.mkdir(parents=True)
     if any(plot_dir.glob('*.pdf')) > 0:
         print('Plot directory is not empty. Files might be overwritten, but not deleted.')
+
+    results = pd.read_csv(results_dir / 'results.csv')
+
+    print('How do prediction results differ between models?')
+    print(results.groupby('model_name')[['train_mcc', 'test_mcc']].agg(
+        ['mean', 'median', 'std']).transpose().round(2))
+
+    print('\nHow do prediction results (test MCC) differ between instance sets?')
+    print(results.groupby('instances_name')['test_mcc'].agg(['mean', 'median', 'std']).transpose(
+        ).round(2))
+
+    print('\nHow do prediction results (test MCC) differ between feature sets?')
+    print(results.groupby('features_name')['test_mcc'].agg(['mean', 'median', 'std']).transpose(
+        ).round(2))
 
 
 # Parse some command-line arguments and run the main routine.
