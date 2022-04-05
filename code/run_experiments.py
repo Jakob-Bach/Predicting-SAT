@@ -8,8 +8,38 @@ Usage: python -m run_experiments --help
 
 
 import argparse
+import multiprocessing
 import pathlib
-from typing import Optional
+from typing import Any, Dict, Optional, Sequence
+
+import pandas as pd
+import tqdm
+
+import prepare_datasets
+import prediction
+
+
+# Define experimental design as cross-product of instance sets and feature sets for full "dataset".
+# Return a list of experimental settings (used for calling "run_experimental_setting()").
+def define_experimental_settings(dataset: pd.DataFrame) -> Sequence[Dict[str, Any]]:
+    return [{'dataset': dataset, 'instances_name': instances_name, 'features_name': featureset_name}
+            for instances_name in prepare_datasets.INSTANCE_FILTER_RULES
+            for featureset_name in prepare_datasets.FEATURE_FILTER_RULES]
+
+
+# Evaluate predictions on "dataset" limited to one instance set with one feature set.
+# Return a table with evaluation metrics.
+def run_experimental_setting(dataset: pd.DataFrame, instances_name: str,
+                             features_name: str) -> pd.DataFrame:
+    instance_filter_func = prepare_datasets.INSTANCE_FILTER_RULES[instances_name]
+    feature_filter_func = prepare_datasets.FEATURE_FILTER_RULES[features_name]
+    dataset = dataset[instance_filter_func(dataset)]
+    X = dataset[feature_filter_func(dataset)]
+    y = dataset['meta.result']
+    results = prediction.predict_and_evaluate(X=X, y=y)
+    results['instances_name'] = instances_name
+    results['features_name'] = features_name
+    return results
 
 
 # Main-routine: run complete experimental pipeline. To that end, read datasets from "data_dir" and
@@ -23,6 +53,18 @@ def run_experiments(data_dir: pathlib.Path, results_dir: pathlib.Path,
         results_dir.mkdir(parents=True)
     if any(results_dir.iterdir()):
         print('Results directory is not empty. Files might be overwritten, but not deleted.')
+    dataset = pd.read_csv(data_dir / 'dataset.csv')
+    experimental_settings = define_experimental_settings(dataset=dataset)
+    progress_bar = tqdm.tqdm(total=len(experimental_settings))
+    process_pool = multiprocessing.Pool(processes=n_processes)
+    results = [process_pool.apply_async(run_experimental_setting, kwds=setting,
+                                        callback=lambda x: progress_bar.update())
+               for setting in experimental_settings]
+    process_pool.close()
+    process_pool.join()
+    progress_bar.close()
+    results = pd.concat([x.get() for x in results])
+    results.to_csv(results_dir / 'results.csv', index=False)
 
 
 # Parse some command-line arguments and run the main routine.

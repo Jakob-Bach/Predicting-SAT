@@ -42,20 +42,28 @@ Section~\ref{sec:conclusion} concludes.
 
 \subsection{Datasets}
 
+3 instance sets:
 - SAT Competition 2020~\cite{balyo2020proceedings} main (400)
 - SAT Competition 2021~\cite{balyo2021proceedings} main (400)
 - all instances from `meta' with results known (11159)
 
 Datasets may contain missing values.
 
-Features (251):
+2 feature sets:
 - SATzilla~\cite{xu2012features} (138)
 - base (56) + gate (57)
 
 \subsection{Predictions}
 
-random forests~\cite{breiman2001random} and XGBoost~\cite{chen2016xgboost}
+Pre-processing: mean imputation, standard scaling
+
+Mixture of simple and complex models
+- simple: kNN, decision tree
+- complex: random forests~\cite{breiman2001random} and XGBoost~\cite{chen2016xgboost}
+
 Matthews Correlation Coefficient (MCC)~\cite{matthews1975comparison, gorodkin2004comparing}
+
+10-fold stratified CV
 
 \subsection{Implementation}
 
