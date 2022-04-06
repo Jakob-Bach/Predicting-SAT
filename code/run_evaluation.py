@@ -29,24 +29,27 @@ def evaluate(results_dir: pathlib.Path, plot_dir: pathlib.Path) -> None:
     results = pd.read_csv(results_dir / 'results.csv')
 
     print('How do prediction results differ between models?')
-    print(results.groupby('model_name')[['train_mcc', 'test_mcc']].agg(
+    print(results[results['num_features'] == 'all'].groupby('model_name')[['train_mcc', 'test_mcc']].agg(
         ['mean', 'median', 'std']).transpose().round(2))
 
     print('\nHow do prediction results (test MCC) differ between instance sets?')
-    print(results.groupby('instances_name')['test_mcc'].agg(['mean', 'median', 'std']).transpose(
-        ).round(2))
+    print(results[results['num_features'] == 'all'].groupby('instances_name')['test_mcc'].agg(
+        ['mean', 'median', 'std']).transpose().round(2))
 
     print('\nHow do prediction results (test MCC) differ between feature sets?')
-    print(results.groupby('features_name')['test_mcc'].agg(['mean', 'median', 'std']).transpose(
-        ).round(2))
+    print(results[results['num_features'] == 'all'].groupby('features_name')['test_mcc'].agg(
+        ['mean', 'median', 'std']).transpose().round(2))
 
-    print('\nWhat are the most important features (on average)?')
+    print('\nWhat are the most important features in predictions (on average)?')
     for features_name, features_filter_func in prepare_datasets.FEATURE_FILTER_RULES.items():
         print('\n-- Feature set:', features_name, '--')
-        print(results[features_filter_func(results)].mean().sort_values(ascending=False).agg(
-                [lambda x: x, 'cumsum']).rename(index=lambda x: x.replace('imp.', ''),
-                                                columns={'<lambda>': 'importance'}).head(10).round(2))
+        print(results[results['num_features'] == 'all'][features_filter_func(results)].mean(
+            ).sort_values(ascending=False).agg([lambda x: x, 'cumsum']).rename(
+                index=lambda x: x.replace('imp.', ''), columns={'<lambda>': 'importance'}).head(10).round(2))
 
+    print('\nHow do prediction results (test MCC) change if filter feature-selection is applied?')
+    print(results.groupby(['instances_name', 'model_name', 'num_features'])['test_mcc'].agg(
+        ['mean', 'median', 'std']).round(2))
 
 # Parse some command-line arguments and run the main routine.
 if __name__ == '__main__':

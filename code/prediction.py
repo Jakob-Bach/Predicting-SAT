@@ -6,6 +6,7 @@ Functions for making and evaluating predictions.
 
 import pandas as pd
 import sklearn.ensemble
+import sklearn.feature_selection
 import sklearn.impute
 import sklearn.metrics
 import sklearn.model_selection
@@ -16,6 +17,7 @@ import xgboost
 
 
 NUM_CV_FOLDS = 10
+NUM_FEATURES_LIST = [5, 10, 'all']
 
 MODELS = [
     {'name': 'Decision tree', 'func': sklearn.tree.DecisionTreeClassifier,
@@ -52,20 +54,30 @@ def predict_and_evaluate(X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
         y_train = y.iloc[train_idx]
         y_test = y.iloc[test_idx]
         y_train_encoded = label_encoder.fit_transform(y=y_train)
-        for model_item in MODELS:
-            model = model_item['func'](**model_item['args'])
-            model.fit(X=X_train, y=y_train_encoded)
-            pred_train = label_encoder.inverse_transform(model.predict(X_train))
-            pred_test = label_encoder.inverse_transform(model.predict(X_test))
-            result = {'fold_id': fold_id, 'model_name': model_item['name']}
-            for metric_name, metric_func in METRICS.items():
-                result[f'train_{metric_name}'] = metric_func(y_true=y_train, y_pred=pred_train)
-                result[f'test_{metric_name}'] = metric_func(y_true=y_test, y_pred=pred_test)
-            if hasattr(model, 'feature_importances_'):
-                feature_importances = model.feature_importances_
-            else:
-                feature_importances = [float('nan')] * len(X_train.columns)
-            result.update({f'imp.{feature_name}': importance for (feature_name, importance)
-                           in zip(X_train.columns, feature_importances)})
-            results.append(result)
+        for num_features in NUM_FEATURES_LIST:
+            feature_selector = sklearn.feature_selection.SelectKBest(
+                score_func=lambda X, y: sklearn.feature_selection.mutual_info_classif(
+                    X=X, y=y, discrete_features=False, random_state=25), k=num_features)
+            feature_selector.fit(X=X_train, y=y_train)
+            X_train_selected = pd.DataFrame(feature_selector.transform(X=X_train),
+                                            columns=feature_selector.get_feature_names_out())
+            X_test_selected = pd.DataFrame(feature_selector.transform(X=X_test),
+                                           columns=feature_selector.get_feature_names_out())
+            for model_item in MODELS:
+                model = model_item['func'](**model_item['args'])
+                model.fit(X=X_train_selected, y=y_train_encoded)
+                pred_train = label_encoder.inverse_transform(model.predict(X_train_selected))
+                pred_test = label_encoder.inverse_transform(model.predict(X_test_selected))
+                result = {'fold_id': fold_id, 'model_name': model_item['name'],
+                          'num_features': num_features}
+                for metric_name, metric_func in METRICS.items():
+                    result[f'train_{metric_name}'] = metric_func(y_true=y_train, y_pred=pred_train)
+                    result[f'test_{metric_name}'] = metric_func(y_true=y_test, y_pred=pred_test)
+                if hasattr(model, 'feature_importances_'):
+                    feature_importances = model.feature_importances_
+                else:
+                    feature_importances = [float('nan')] * len(X_train_selected.columns)
+                result.update({f'imp.{feature_name}': importance for (feature_name, importance)
+                               in zip(X_train_selected.columns, feature_importances)})
+                results.append(result)
     return pd.DataFrame(results)
