@@ -54,15 +54,16 @@ def predict_and_evaluate(X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
         y_train = y.iloc[train_idx]
         y_test = y.iloc[test_idx]
         y_train_encoded = label_encoder.fit_transform(y=y_train)
+        filter_fs_scores = pd.Series(sklearn.feature_selection.mutual_info_classif(
+            X=X_train, y=y_train, discrete_features=False, random_state=25), index=X_train.columns)
+        filter_fs_scores = filter_fs_scores.sort_values(ascending=False)  # avoid sorting for each k
         for num_features in NUM_FEATURES_LIST:
-            feature_selector = sklearn.feature_selection.SelectKBest(
-                score_func=lambda X, y: sklearn.feature_selection.mutual_info_classif(
-                    X=X, y=y, discrete_features=False, random_state=25), k=num_features)
-            feature_selector.fit(X=X_train, y=y_train)
-            X_train_selected = pd.DataFrame(feature_selector.transform(X=X_train),
-                                            columns=feature_selector.get_feature_names_out())
-            X_test_selected = pd.DataFrame(feature_selector.transform(X=X_test),
-                                           columns=feature_selector.get_feature_names_out())
+            if num_features == 'all':
+                selected_features = X_train.columns
+            else:
+                selected_features = filter_fs_scores.index[:num_features]  # sorted beforehand!
+            X_train_selected = X_train[selected_features]
+            X_test_selected = X_test[selected_features]
             for model_item in MODELS:
                 model = model_item['func'](**model_item['args'])
                 model.fit(X=X_train_selected, y=y_train_encoded)
