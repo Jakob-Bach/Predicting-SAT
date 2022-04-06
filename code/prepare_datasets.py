@@ -24,9 +24,8 @@ INSTANCE_FILTER_RULES = {
 }  # functions returning boolean pd.Series to select instances (rows) from the overall dataset
 
 FEATURE_FILTER_RULES = {
-    'Base + gate': lambda dataset: [x for x in dataset.columns if x.startswith('base.') or
-                                    x.startswith('gate.')],
-    'SATzilla 2012': lambda dataset: [x for x in dataset.columns if x.startswith('satzilla.')]
+    'Base + gate': lambda dataset: [x for x in dataset.columns if 'base.' in x or 'gate.' in x],
+    'SATzilla 2012': lambda dataset: [x for x in dataset.columns if 'satzilla.' in x]
 }  # functions returning list of strings to select features (columns) from the overall dataset
 
 

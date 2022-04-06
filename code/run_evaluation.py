@@ -12,6 +12,8 @@ import pathlib
 
 import pandas as pd
 
+import prepare_datasets
+
 
 # Main-routine: run complete evaluation pipeline. To that end, read results from the "results_dir"
 # and save plots to the "plot_dir". Print some statistics to the console.
@@ -37,6 +39,13 @@ def evaluate(results_dir: pathlib.Path, plot_dir: pathlib.Path) -> None:
     print('\nHow do prediction results (test MCC) differ between feature sets?')
     print(results.groupby('features_name')['test_mcc'].agg(['mean', 'median', 'std']).transpose(
         ).round(2))
+
+    print('\nWhat are the most important features (on average)?')
+    for features_name, features_filter_func in prepare_datasets.FEATURE_FILTER_RULES.items():
+        print('\n-- Feature set:', features_name, '--')
+        print(results[features_filter_func(results)].mean().sort_values(ascending=False).agg(
+                [lambda x: x, 'cumsum']).rename(index=lambda x: x.replace('imp.', ''),
+                                                columns={'<lambda>': 'importance'}).head(10).round(2))
 
 
 # Parse some command-line arguments and run the main routine.

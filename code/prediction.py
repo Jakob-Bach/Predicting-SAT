@@ -61,5 +61,11 @@ def predict_and_evaluate(X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
             for metric_name, metric_func in METRICS.items():
                 result[f'train_{metric_name}'] = metric_func(y_true=y_train, y_pred=pred_train)
                 result[f'test_{metric_name}'] = metric_func(y_true=y_test, y_pred=pred_test)
+            if hasattr(model, 'feature_importances_'):
+                feature_importances = model.feature_importances_
+            else:
+                feature_importances = [float('nan')] * len(X_train.columns)
+            result.update({f'imp.{feature_name}': importance for (feature_name, importance)
+                           in zip(X_train.columns, feature_importances)})
             results.append(result)
     return pd.DataFrame(results)
