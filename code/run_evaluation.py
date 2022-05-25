@@ -15,9 +15,9 @@ import pandas as pd
 import prepare_datasets
 
 
-# Main-routine: run complete evaluation pipeline. To that end, read results from the "results_dir"
-# and save plots to the "plot_dir". Print some statistics to the console.
-def evaluate(results_dir: pathlib.Path, plot_dir: pathlib.Path) -> None:
+# Main-routine: run complete evaluation pipeline. To that end, read the dataset from "data_dir",
+# results from the "results_dir", and save plots to the "plot_dir". Print some statistics.
+def evaluate(data_dir: pathlib.Path, results_dir: pathlib.Path, plot_dir: pathlib.Path) -> None:
     if not results_dir.is_dir():
         raise FileNotFoundError('Results directory does not exist.')
     if not plot_dir.is_dir():
@@ -26,7 +26,16 @@ def evaluate(results_dir: pathlib.Path, plot_dir: pathlib.Path) -> None:
     if any(plot_dir.glob('*.pdf')) > 0:
         print('Plot directory is not empty. Files might be overwritten, but not deleted.')
 
+    dataset = pd.read_csv(data_dir / 'dataset.csv')
     results = pd.read_csv(results_dir / 'results.csv')
+
+    print('\nHow does the distribution of instance families (in %) differ between instance sets?')
+    for instances_name, instances_filter_func in prepare_datasets.INSTANCE_FILTER_RULES.items():
+        print('\n-- Instance set:', instances_name, '--')
+        agg_data = dataset.loc[instances_filter_func(dataset), 'meta.family'].value_counts(
+            normalize=True) * 100
+        print(agg_data.describe().round(2), '\n')
+        print(agg_data.agg([lambda x: x, 'cumsum']).rename(columns={'<lambda>': '%'}).round(2))
 
     print('How do prediction results differ between models?')
     print(results[results['num_features'] == 'all'].groupby('model_name')[['train_mcc', 'test_mcc']].agg(
@@ -51,10 +60,13 @@ def evaluate(results_dir: pathlib.Path, plot_dir: pathlib.Path) -> None:
     print(results.groupby(['instances_name', 'model_name', 'num_features'])['test_mcc'].agg(
         ['mean', 'median', 'std']).round(2))
 
+
 # Parse some command-line arguments and run the main routine.
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Creates the paper\'s plots and prints statistics.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-d', '--data', type=pathlib.Path, default='data/', dest='data_dir',
+                        help='Directory with prediction datasets.')
     parser.add_argument('-r', '--results', type=pathlib.Path, default='data/',
                         dest='results_dir', help='Directory with experimental results.')
     parser.add_argument('-p', '--plots', type=pathlib.Path, default='../text/plots',
