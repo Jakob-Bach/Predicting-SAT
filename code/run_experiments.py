@@ -19,24 +19,27 @@ import prepare_datasets
 import prediction
 
 
-# Define experimental design as cross-product of instance sets and feature sets for full "dataset".
+# Define experimental design as the cross-product of cross-validation folds, instance sets, and
+# feature sets for the full "dataset".
 # Return a list of experimental settings (used for calling "run_experimental_setting()").
 def define_experimental_settings(dataset: pd.DataFrame) -> Sequence[Dict[str, Any]]:
-    return [{'dataset': dataset, 'instances_name': instances_name, 'features_name': featureset_name}
+    return [{'dataset': dataset, 'fold_id': fold_id, 'instances_name': instances_name,
+             'features_name': featureset_name}
+            for fold_id in range(prediction.NUM_CV_FOLDS)
             for instances_name in prepare_datasets.INSTANCE_FILTER_RULES
             for featureset_name in prepare_datasets.FEATURE_FILTER_RULES]
 
 
-# Evaluate predictions on "dataset" limited to one instance set with one feature set.
+# Evaluate predictions on "dataset" limited to one fold, one instance set, and one feature set.
 # Return a table with evaluation metrics.
-def run_experimental_setting(dataset: pd.DataFrame, instances_name: str,
+def run_experimental_setting(dataset: pd.DataFrame, fold_id: int, instances_name: str,
                              features_name: str) -> pd.DataFrame:
     instance_filter_func = prepare_datasets.INSTANCE_FILTER_RULES[instances_name]
     feature_filter_func = prepare_datasets.FEATURE_FILTER_RULES[features_name]
     dataset = dataset[instance_filter_func(dataset)]
     X = dataset[feature_filter_func(dataset)]
     y = dataset['meta.result']
-    results = prediction.predict_and_evaluate(X=X, y=y)
+    results = prediction.predict_and_evaluate(X=X, y=y, fold_id=fold_id)
     results['instances_name'] = instances_name
     results['features_name'] = features_name
     return results
