@@ -52,12 +52,23 @@ def evaluate(data_dir: pathlib.Path, results_dir: pathlib.Path, plot_dir: pathli
     print(results[results['num_features'] == 'all'].groupby('features_name')['test_mcc'].agg(
         ['mean', 'median', 'std']).transpose().round(2))
 
+    print('\nWhat are the most important features in filter-feature selection (on average)?')
+    for features_name, features_filter_func in prepare_datasets.FEATURE_FILTER_RULES.items():
+        print('\n-- Feature set:', features_name, '--')
+        agg_data = results[results['num_features'] == 'all'][features_filter_func(results)]
+        agg_data = agg_data[[x for x in agg_data.columns if x.startswith('fs.')]]
+        agg_data = agg_data.mean().sort_values(ascending=False).agg([lambda x: x, 'cumsum'])
+        agg_data.rename(index=lambda x: x.replace('fs.', ''), columns={'<lambda>': 'importance'}, inplace=True)
+        print(agg_data.head(10).round(2))
+
     print('\nWhat are the most important features in predictions (on average)?')
     for features_name, features_filter_func in prepare_datasets.FEATURE_FILTER_RULES.items():
         print('\n-- Feature set:', features_name, '--')
-        print(results[results['num_features'] == 'all'][features_filter_func(results)].mean(
-            ).sort_values(ascending=False).agg([lambda x: x, 'cumsum']).rename(
-                index=lambda x: x.replace('imp.', ''), columns={'<lambda>': 'importance'}).head(10).round(2))
+        agg_data = results[results['num_features'] == 'all'][features_filter_func(results)]
+        agg_data = agg_data[[x for x in agg_data.columns if x.startswith('imp.')]]
+        agg_data = agg_data.mean().sort_values(ascending=False).agg([lambda x: x, 'cumsum'])
+        agg_data.rename(index=lambda x: x.replace('imp.', ''), columns={'<lambda>': 'importance'}, inplace=True)
+        print(agg_data.head(10).round(2))
 
     print('\nHow do prediction results (test MCC) change if filter feature-selection is applied?')
     print(results.groupby(['instances_name', 'model_name', 'num_features'])['test_mcc'].agg(

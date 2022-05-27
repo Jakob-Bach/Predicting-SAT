@@ -57,6 +57,7 @@ def predict_and_evaluate(X: pd.DataFrame, y: pd.Series, fold_id: int) -> pd.Data
     y_train_encoded = label_encoder.fit_transform(y=y_train)
     filter_fs_scores = pd.Series(sklearn.feature_selection.mutual_info_classif(
         X=X_train, y=y_train, discrete_features=False, random_state=25), index=X_train.columns)
+    filter_fs_scores = filter_fs_scores / filter_fs_scores.sum()  # normalize (as model importances)
     filter_fs_scores = filter_fs_scores.sort_values(ascending=False)  # avoid sorting for each k
     for num_features in NUM_FEATURES_LIST:
         if num_features == 'all':
@@ -79,6 +80,8 @@ def predict_and_evaluate(X: pd.DataFrame, y: pd.Series, fold_id: int) -> pd.Data
                 feature_importances = model.feature_importances_
             else:
                 feature_importances = [float('nan')] * len(X_train_selected.columns)
+            result.update({f'fs.{feature_name}': fs_score for (feature_name, fs_score)
+                           in filter_fs_scores.iteritems()})
             result.update({f'imp.{feature_name}': importance for (feature_name, importance)
                            in zip(X_train_selected.columns, feature_importances)})
             results.append(result)
