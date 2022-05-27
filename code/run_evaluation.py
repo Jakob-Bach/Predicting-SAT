@@ -29,15 +29,18 @@ def evaluate(data_dir: pathlib.Path, results_dir: pathlib.Path, plot_dir: pathli
     dataset = pd.read_csv(data_dir / 'dataset.csv')
     results = pd.read_csv(results_dir / 'results.csv')
 
-    print('\nHow does the distribution of instance families (in %) differ between instance sets?')
-    for instances_name, instances_filter_func in prepare_datasets.INSTANCE_FILTER_RULES.items():
+    print('\nHow is are the instance families and SAT instances in them distributed?')
+    for instances_name, instance_filter_func in prepare_datasets.INSTANCE_FILTER_RULES.items():
         print('\n-- Instance set:', instances_name, '--')
-        agg_data = dataset.loc[instances_filter_func(dataset), 'meta.family'].value_counts(
-            normalize=True) * 100
-        print(agg_data.describe().round(2), '\n')
-        print(agg_data.agg([lambda x: x, 'cumsum']).rename(columns={'<lambda>': '%'}).round(2))
+        agg_data = dataset[instance_filter_func(dataset)].groupby('meta.family')['meta.result']
+        agg_data = agg_data.agg([len, lambda x: (x == 'sat').sum() / len(x) * 100])
+        agg_data.sort_values(by='len', ascending=False, inplace=True)
+        agg_data.rename(columns={'len': 'instances', '<lambda_0>': '% sat'}, inplace=True)
+        agg_data['% instances'] = agg_data['instances'] / agg_data['instances'].sum() * 100
+        agg_data['cum % instances'] = agg_data['% instances'].cumsum()
+        print(agg_data.round(2))
 
-    print('How do prediction results differ between models?')
+    print('\nHow do prediction results differ between models?')
     print(results[results['num_features'] == 'all'].groupby('model_name')[['train_mcc', 'test_mcc']].agg(
         ['mean', 'median', 'std']).transpose().round(2))
 
