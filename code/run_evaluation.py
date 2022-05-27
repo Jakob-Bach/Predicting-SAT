@@ -81,6 +81,29 @@ def evaluate(data_dir: pathlib.Path, results_dir: pathlib.Path, plot_dir: pathli
         {'num_features': int}).groupby(['instances_name', 'num_features'])['test_mcc'].agg(
             ['mean', 'median', 'std']).round(2))
 
+    print('\nHow are the features Spearman-correlated to wrong predictions?')
+    for features_name, features_filter_func in prepare_datasets.FEATURE_FILTER_RULES.items():
+        print('\n-- Feature set:', features_name, '--')
+        agg_data = results[results['num_features'] == 'all'][features_filter_func(results)]
+        agg_data = agg_data[[x for x in agg_data.columns if x.startswith('miscl_corr.')]]
+        agg_data = agg_data.mean().sort_values(ascending=False)
+        agg_data.rename(index=lambda x: x.replace('miscl_corr.', ''), inplace=True)
+        print(agg_data.dropna().round(2))
+
+    print('\nWhat is the fraction of wrong predictions for different families (with size >= 20)?')
+    for instances_name, instance_filter_func in prepare_datasets.INSTANCE_FILTER_RULES.items():
+        print('\n-- Instance set:', instances_name, '--')
+        agg_data = results[results['num_features'] == 'all']
+        agg_data = agg_data[[x for x in agg_data.columns if x.startswith('miscl_freq.')]]
+        agg_data = agg_data.mean().sort_values(ascending=False)
+        agg_data.rename(index=lambda x: x.replace('miscl_freq.', ''), inplace=True)
+        agg_data = agg_data.reset_index().rename(columns={'index': 'family', 0: '% misclassified'})
+        agg_data = agg_data.merge(dataset.loc[instance_filter_func(dataset), 'meta.family'].value_counts(
+            ).reset_index().rename(columns={'index': 'family', 'meta.family': 'total instances'}))
+        agg_data = agg_data[agg_data['total instances'] >= 20]
+        agg_data.sort_values(by='% misclassified', ascending=False, inplace=True)
+        print(agg_data.round(2))
+
 
 # Parse some command-line arguments and run the main routine.
 if __name__ == '__main__':

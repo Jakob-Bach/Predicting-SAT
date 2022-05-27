@@ -4,6 +4,8 @@ Functions for making and evaluating predictions.
 """
 
 
+import warnings
+
 import pandas as pd
 import sklearn.ensemble
 import sklearn.feature_selection
@@ -36,9 +38,10 @@ METRICS = {'acc': sklearn.metrics.accuracy_score, 'mcc': sklearn.metrics.matthew
 
 
 # Evaluate all prediction models for all feature-selection settings on the cross-validation fold
-# identified by "fold_id" on the dataset given by "X" and "y".
+# identified by "fold_id" on the dataset given by the feature part "X" and the target "y".
+# "families" is used for evaluation (of misclassifications) only.
 # Return a table with train/test performance regarding multiple evaluation metrics.
-def predict_and_evaluate(X: pd.DataFrame, y: pd.Series, fold_id: int) -> pd.DataFrame:
+def predict_and_evaluate(X: pd.DataFrame, y: pd.Series, families: pd.Series, fold_id: int) -> pd.DataFrame:
     imputer = sklearn.impute.SimpleImputer(strategy='mean')
     label_encoder = sklearn.preprocessing.LabelEncoder()
     scaler = sklearn.preprocessing.MinMaxScaler()
@@ -52,9 +55,10 @@ def predict_and_evaluate(X: pd.DataFrame, y: pd.Series, fold_id: int) -> pd.Data
     X_test = pd.DataFrame(imputer.transform(X=X_test), columns=X_test.columns)
     X_train = pd.DataFrame(scaler.fit_transform(X=X_train), columns=X_train.columns)
     X_test = pd.DataFrame(scaler.transform(X=X_test), columns=X_test.columns)
-    y_train = y.iloc[train_idx]
-    y_test = y.iloc[test_idx]
+    y_train = y.iloc[train_idx].reset_index(drop=True)
+    y_test = y.iloc[test_idx].reset_index(drop=True)
     y_train_encoded = label_encoder.fit_transform(y=y_train)
+    families_test = families.iloc[test_idx].reset_index(drop=True)  # not used for predictions
     filter_fs_scores = pd.Series(sklearn.feature_selection.mutual_info_classif(
         X=X_train, y=y_train, discrete_features=False, random_state=25), index=X_train.columns)
     filter_fs_scores = filter_fs_scores / filter_fs_scores.sum()  # normalize (as model importances)
@@ -84,5 +88,12 @@ def predict_and_evaluate(X: pd.DataFrame, y: pd.Series, fold_id: int) -> pd.Data
                            in filter_fs_scores.iteritems()})
             result.update({f'imp.{feature_name}': importance for (feature_name, importance)
                            in zip(X_train_selected.columns, feature_importances)})
+            with warnings.catch_warnings():
+                warnings.filterwarnings(action='ignore', message='An input array is constant')
+                result.update({f'miscl_corr.{feature_name}': miscl_corr for (feature_name, miscl_corr)
+                               in X_test.corrwith(y_test != pred_test, method='spearman').iteritems()})
+            result.update({f'miscl_freq.{family_name}': miscl_freq for (family_name, miscl_freq)
+                           in pd.DataFrame({'family': families_test, 'misc': y_test != pred_test}
+                                           ).groupby('family')['misc'].mean().iteritems()})
             results.append(result)
     return pd.DataFrame(results)

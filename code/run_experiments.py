@@ -37,9 +37,9 @@ def run_experimental_setting(dataset: pd.DataFrame, fold_id: int, instances_name
     instance_filter_func = prepare_datasets.INSTANCE_FILTER_RULES[instances_name]
     feature_filter_func = prepare_datasets.FEATURE_FILTER_RULES[features_name]
     dataset = dataset[instance_filter_func(dataset)]
-    X = dataset[feature_filter_func(dataset)]
-    y = dataset['meta.result']
-    results = prediction.predict_and_evaluate(X=X, y=y, fold_id=fold_id)
+    results = prediction.predict_and_evaluate(
+        X=dataset[feature_filter_func(dataset)], y=dataset['meta.result'],
+        families=dataset['meta.family'], fold_id=fold_id)
     results['instances_name'] = instances_name
     results['features_name'] = features_name
     return results
