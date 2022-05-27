@@ -29,7 +29,13 @@ def evaluate(data_dir: pathlib.Path, results_dir: pathlib.Path, plot_dir: pathli
     dataset = pd.read_csv(data_dir / 'dataset.csv')
     results = pd.read_csv(results_dir / 'results.csv')
 
-    print('\nHow is are the instance families and SAT instances in them distributed?')
+    print('\nHow is satisfiability distributed?')
+    for instances_name, instance_filter_func in prepare_datasets.INSTANCE_FILTER_RULES.items():
+        print('\n-- Instance set:', instances_name, '--')
+        print(dataset.loc[instance_filter_func(dataset), 'meta.result'].value_counts(
+            normalize=True).round(2))
+
+    print('\nHow is are the instance families and satisfiability in them distributed?')
     for instances_name, instance_filter_func in prepare_datasets.INSTANCE_FILTER_RULES.items():
         print('\n-- Instance set:', instances_name, '--')
         agg_data = dataset[instance_filter_func(dataset)].groupby('meta.family')['meta.result']
