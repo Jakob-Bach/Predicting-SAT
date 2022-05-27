@@ -17,7 +17,7 @@ import xgboost
 
 
 NUM_CV_FOLDS = 10
-NUM_FEATURES_LIST = [5, 10, 'all']
+NUM_FEATURES_LIST = [1, 2, 3, 4, 5, 10, 20, 'all']
 
 MODELS = [
     {'name': 'Decision tree', 'func': sklearn.tree.DecisionTreeClassifier,

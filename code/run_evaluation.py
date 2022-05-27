@@ -70,9 +70,10 @@ def evaluate(data_dir: pathlib.Path, results_dir: pathlib.Path, plot_dir: pathli
         agg_data.rename(index=lambda x: x.replace('imp.', ''), columns={'<lambda>': 'importance'}, inplace=True)
         print(agg_data.head(10).round(2))
 
-    print('\nHow do prediction results (test MCC) change if filter feature-selection is applied?')
-    print(results.groupby(['instances_name', 'model_name', 'num_features'])['test_mcc'].agg(
-        ['mean', 'median', 'std']).round(2))
+    print('\nHow do prediction results (decision tree test MCC) depend on the number of features?')
+    print(results[results['model_name'] == 'Decision tree'].replace({'all': 1000}).astype(
+        {'num_features': int}).groupby(['instances_name', 'num_features'])['test_mcc'].agg(
+            ['mean', 'median', 'std']).round(2))
 
 
 # Parse some command-line arguments and run the main routine.
