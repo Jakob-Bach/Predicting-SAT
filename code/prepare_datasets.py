@@ -47,10 +47,9 @@ def merge_databases(databases_dir: pathlib.Path, dataset_dir: pathlib.Path) -> N
     dataset = pd.read_csv(databases_dir / 'meta.csv')
     dataset.rename(columns=lambda x: f'meta.{x}' if x != 'hash' else x, inplace=True)
     numeric_cols = []
-    for db_file in databases_dir.glob('*.csv'):
-        db_name = db_file.stem
+    for db_name in DATABASE_NAMES:
         if db_name != 'meta':
-            database = pd.read_csv(db_file)
+            database = pd.read_csv(databases_dir / (db_name + '.csv'))
             database.rename(columns=lambda x: f'{db_name}.{x}' if x != 'hash' else x, inplace=True)
             numeric_cols.extend([x for x in database.columns if x != 'hash'])
             dataset = dataset.merge(database, on='hash', how='left', copy=False)
