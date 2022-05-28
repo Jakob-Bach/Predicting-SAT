@@ -65,9 +65,8 @@ def prepare_datasets(data_dir: pathlib.Path) -> None:
         data_dir.mkdir(parents=True)
     if any(data_dir.iterdir()):
         print('Dataset directory is not empty. Files might be overwritten, but not deleted.')
-    databases_dir = data_dir / 'databases'
-    download_and_save_databases(data_dir=databases_dir)
-    merge_databases(databases_dir=databases_dir, dataset_dir=data_dir)
+    download_and_save_databases(data_dir=data_dir)
+    merge_databases(databases_dir=data_dir, dataset_dir=data_dir)
 
 
 # Parse some command-line arguments and run the main routine.
