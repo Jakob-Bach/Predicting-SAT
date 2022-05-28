@@ -29,9 +29,8 @@ MODELS = [
     {'name': 'Random forest', 'func': sklearn.ensemble.RandomForestClassifier,
      'args': {'n_estimators': 100, 'random_state': 25, 'n_jobs': 1}},
     {'name': 'XGBoost', 'func': xgboost.XGBClassifier,
-     'args': {'n_estimators': 100, 'random_state': 25, 'n_jobs': 1,
-              'booster': 'gbtree', 'objective': 'binary:logistic',  # also handles multi-class
-              'use_label_encoder': False, 'verbosity': 0}}
+     'args': {'n_estimators': 100, 'random_state': 25, 'n_jobs': 1, 'booster': 'gbtree',
+              'objective': 'binary:logistic', 'verbosity': 0}}  # also supports multi-class
 ]
 
 METRICS = {'acc': sklearn.metrics.accuracy_score, 'mcc': sklearn.metrics.matthews_corrcoef}
