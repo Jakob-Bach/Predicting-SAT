@@ -22,6 +22,7 @@
 \paragraph{Motivation}
 
 SATzilla~\cite{xu2008satzilla, xu2012satzilla2012}, ISAC~\cite{kadioglu2010isac}, SNNAP~\cite{collautti2013snnap}
+ML interpretability~\cite{carvalho2019machine, gilpin2018explaining}
 
 \paragraph{Contributions}
 
@@ -36,6 +37,22 @@ Section~\ref{sec:conclusion} concludes.
 
 \section{Related Work}
 \label{sec:related-work}
+
+- predict satisfiability with different instance sets~\cite{devlin2008satisfiability}
+- predict satisfiability of 3SAT instances generated to be in a critical region (boundary SAT/UNSAT)~\cite{xu2012predicting}
+- another paper working with uniform 3SAT instances~\cite{leyton2014understanding}
+- neural networks to predict satisfiability, working with uniform random 3 SAT instances close to phase transition (like Xu et al. 2012)~\cite{cameron2020predicting}
+- another, heavily cited neural network approach~\cite{selsam2018learning}
+- predicting satisfiability of formulas with some other special structure~\cite{elhalaby2020learning}
+
+- related topic: do not predict SAT itself, but use ML to guide solvers~\cite{amizadeh2019pdp} or analyze performance of solvers~\cite{hutter2013identifying}
+- also: predict SAT to guide solver~\cite{wu2017improving}
+
+- related topic: predict satisfiability of other problems, e.g., CSPs~\cite{xu2018towards, liu2020learning}
+
+- surveys on ML for SAT and other problems~\cite{amrani2018ml, popescu2021overview} (both also address predicting SAT; should have a closer look)
+
+- possibly interesting perspective what we can learn at all~\cite{yehuda2020its}
 
 \section{Experimental Design}
 \label{sec:experimental-design}
@@ -62,7 +79,7 @@ Datasets may contain missing values.
 Pre-processing: mean imputation, standard scaling
 
 Mixture of simple and complex models
-- simple: kNN, decision tree
+- simple: kNN, decision tree~\cite{breiman1984classification}
 - complex: random forests~\cite{breiman2001random} and XGBoost~\cite{chen2016xgboost}
 
 Matthews Correlation Coefficient (MCC)~\cite{matthews1975comparison, gorodkin2004comparing}
@@ -71,7 +88,7 @@ Matthews Correlation Coefficient (MCC)~\cite{matthews1975comparison, gorodkin200
 
 filter feature selection: None, 1, 2, 3, 4, 5, 10, 20
 
-Analysis of feature importance: filter scores, model importance, (average normalized absolute) SHAP~\cite{lundberg2017unified}
+Analysis of feature importance: filter~\cite{guyon2003introduction} scores (to be concrete: MI~\cite{kraskov2004estimating}), model importance, (average normalized absolute) SHAP~\cite{lundberg2017unified}
 
 \subsection{Implementation}
 
