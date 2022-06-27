@@ -10,6 +10,7 @@ Usage: python -m run_evaluation --help
 import argparse
 import pathlib
 
+import numpy as np
 import pandas as pd
 
 import prepare_datasets
@@ -57,6 +58,14 @@ def evaluate(data_dir: pathlib.Path, results_dir: pathlib.Path, plot_dir: pathli
     print('\nHow do prediction results (test MCC) differ between feature sets?')
     print(results[results['num_features'] == 'all'].groupby('features_name')['test_mcc'].agg(
         ['mean', 'median', 'std']).transpose().round(2))
+
+    print('\nHow many features are there where the mode makes up a certain % of non-NA values?')
+    for features_name, features_filter_func in prepare_datasets.FEATURE_FILTER_RULES.items():
+        features = features_filter_func(dataset)
+        print(f'\n-- Feature set: {features_name} ({len(features)} features) --')
+        agg_data = dataset[features].apply(lambda x: (x == x.mode()[0]).sum() / x.notna().sum())
+        for threshold in np.arange(start=0.5, stop=1.01, step=0.1):
+            print(f'Mode fraction >= {threshold:.0%}: {(agg_data >= threshold).sum()} features')
 
     print('\nWhat are the most important features (on average)?')
     for imp_name, imp_description in [('fs', 'Filter scores'), ('mod', 'Model-based'),

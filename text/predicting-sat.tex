@@ -68,11 +68,13 @@ Ratio of SAT / UNSAT roughly balanced in Sc 2021 and `Solved', SC datasets also 
 Distribution of instance families varies between datasets; SC datasets show more even distribution
 Distribution of satisfiability varies greatly between families; we do not use family information directly as feature, but classifiers might leverage properties of certain families indirectly (if families imply particular structure of instances)
 
-Datasets may contain missing values.
+Datasets may contain missing values. -> describe
 
 2 feature sets:
 - SATzilla~\cite{xu2012features} (138)
 - base (56) + gate (57)
+
+Should mention number of constant / nearly constant features.
 
 \subsection{Predictions}
 
@@ -96,6 +98,11 @@ Analysis of feature importance: filter~\cite{guyon2003introduction} scores (to b
 
 \section{Evaluation}
 \label{sec:evaluation}
+
+Maybe describe feature distribution/outliers?
+Correlation/MI of features to target
+Should also mention correlation/MI between features (maybe remove high correlation beforehand?)
+Could also include results of PCA (how many variance explained by how many components)
 
 Analysis of misclassified instances: correlation of feature values to misclassification; misclassification ratio for families
 
