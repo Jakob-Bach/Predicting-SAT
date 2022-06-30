@@ -39,18 +39,29 @@ Section~\ref{sec:conclusion} concludes.
 \label{sec:related-work}
 
 - predict satisfiability with different instance sets~\cite{devlin2008satisfiability}
+- predict satisfiability with different instance sets and feature selection~\cite{xu2007hierarchical}
+  - part of Satzilla 2007~\cite{xu2007satzilla} / 2009~\cite{xu2008satzilla}
+- feature extractor and evaluation with sat + category prediction~\cite{provan2022satfeatpy}
 - predict satisfiability of 3SAT instances generated to be in a critical region (boundary SAT/UNSAT)~\cite{xu2012predicting}
 - another paper working with uniform 3SAT instances~\cite{leyton2014understanding}
+
+- graph neural network to predict SAT for generated instances~\cite{bunz2017graph}
 - neural networks to predict satisfiability, working with uniform random 3 SAT instances close to phase transition (like Xu et al. 2012)~\cite{cameron2020predicting}
-- another, heavily cited neural network approach~\cite{selsam2018learning}
+- another, heavily cited neural network approach (can also help to find satisfying assignment)~\cite{selsam2019learning}
+- neural network working with classical feature representation~\cite{danisovszky2020classification}
+- auto-encoder to predict satisfiability~\cite{dalla2021automated}
+- very recent NN approach addressing problem of decreased prediction quality if test formulas are smaller than train formulas~\cite{zhang2022towards}
 - predicting satisfiability of formulas with some other special structure~\cite{elhalaby2020learning}
 
-- related topic: do not predict SAT itself, but use ML to guide solvers~\cite{amizadeh2019pdp} or analyze performance of solvers~\cite{hutter2013identifying}
+- related topic: do not predict SAT itself, but use ML to guide solvers~\cite{amizadeh2019pdp, soos2019crystal, selsam2019guiding, zhang2021nlocalsat} or analyze performance of solvers~\cite{hutter2013identifying} or select solver~\cite{xu2012satzilla2012, bach2022comprehensive} or configure solver~\cite{hoos2021automated}
 - also: predict SAT to guide solver~\cite{wu2017improving}
+- also: predict properties other than satisfiability, e.g., temperature~\cite{giraldez2021temperature}, family~\cite{ansotegui2017structure, li2021hierarchical}, or hardness (runtime)~\cite{nudelman2004understanding, xu2007hierarchical, li2021hierarchical}
 
-- related topic: predict satisfiability of other problems, e.g., CSPs~\cite{xu2018towards, liu2020learning}
+- related topic: predict satisfiability of other problems, e.g., CSPs~\cite{xu2018towards, liu2020learning, toenshoff2021graph}
 
-- surveys on ML for SAT and other problems~\cite{amrani2018ml, popescu2021overview} (both also address predicting SAT; should have a closer look)
+- surveys on ML for SAT and other problems~\cite{amrani2018ml, popescu2022overview, guo2022machine} (also address predicting SAT)
+
+- recent survey on structural features of SAT instances: \cite{alyahya2022structure}
 
 - possibly interesting perspective what we can learn at all~\cite{yehuda2020its}
 
@@ -94,7 +105,7 @@ Analysis of feature importance: filter~\cite{guyon2003introduction} scores (to b
 
 \subsection{Implementation}
 
-\emph{scikit-learn} \cite{pedregosa2011scikit}, \emph{gbd-tools}~\cite{iser2020collaborative}
+\emph{scikit-learn} \cite{pedregosa2011scikit}, \emph{gbd-tools}~\cite{iser2021collaborative}
 
 \section{Evaluation}
 \label{sec:evaluation}
