@@ -1,13 +1,10 @@
 # Predicting Satisfiability of Benchmark Instances
 
-This repository contains the code and text of the paper
+This repository contains the code and text of the suspended paper
 
-> Bach, Jakob, and Markus Iser. "Predicting Satisfiablity of Benchmark Instances"
+> "Predicting Satisfiablity of Benchmark Instances"
 
-(The paper is not published yet.
-Once it's published, we'll add a link to it here.
-We'll link the experimental data, too.)
-
+This research project was discontinued ☹️ but the existing code should work.
 This document describes the setup and the steps to reproduce the experiments.
 
 ## Setup
